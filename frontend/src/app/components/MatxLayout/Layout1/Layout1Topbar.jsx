@@ -14,8 +14,7 @@ import {
     IconButton,
     MenuItem,
     Avatar,
-    useMediaQuery,
-    Hidden,
+    useMediaQuery
 } from '@mui/material'
 import { topBarHeight } from 'app/utils/constant'
 
@@ -55,6 +54,7 @@ const UserMenu = styled(Box)(() => ({
     alignItems: 'center',
     cursor: 'pointer',
     borderRadius: 24,
+    marginLeft: '8px',
     padding: 4,
     '& span': {
         margin: '0 8px',
@@ -147,16 +147,11 @@ const Layout1Topbar = () => {
 
                     <MatxMenu
                         menuButton={
-                            <UserMenu>
-                                <Hidden xsDown>
-                                    <Span>
-                                        Hi <strong>{user.name}</strong>
-                                    </Span>
-                                </Hidden>
+                            <UserMenu>                                
                                 <Avatar
                                     src={user.avatar}
                                     sx={{ cursor: 'pointer' }}
-                                />
+                                >{user.avatar}</Avatar>
                             </UserMenu>
                         }
                     >
@@ -167,7 +162,7 @@ const Layout1Topbar = () => {
                             </Link>
                         </StyledItem>
                         <StyledItem>
-                            <Link to="/page-layouts/user-profile">
+                            <Link to="/profile">
                                 <Icon> person </Icon>
                                 <Span> Profile </Span>
                             </Link>

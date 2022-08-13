@@ -5,7 +5,7 @@ import { Provider } from 'react-redux'
 import { AllPages } from './routes/routes'
 import { MatxTheme } from 'app/components'
 import { useRoutes } from 'react-router-dom'
-import { AuthProvider } from 'app/contexts/JWTAuthContext'
+import { AuthProvider } from 'app/contexts/AuthContext'
 import { SettingsProvider } from 'app/contexts/SettingsContext'
 
 const App = () => {

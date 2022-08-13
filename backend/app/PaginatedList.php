@@ -11,23 +11,39 @@ class PaginatedList
     protected $filterRules = [];
     protected $data;
 
-    public function __construct($data)
-    {
-        $this->data = $data;
+    public function __construct()
+    {        
         $this->filterFunction = $this->defaultFilter();
     }
+
+    public function setData($data)
+    {
+        $this->data = $data;
+    }
+
     public function make($sortBy = '', $order = 'asc', $filter = '')
     {
         $data = $this->data;
-        if (is_callable($this->queryFunction)){
-            $data = ($this->queryFunction)($data);
+
+        if (method_exists($this, 'listQuery')){
+            $data = $this->listQuery($data);
         }
-        if (is_array($filter)){
-            $data = ($this->filterFunction)($data, $filter);
+
+        if (isset($this->listFilters) && count($this->listFilters) > 0){
+            $this->setFilterRules($this->listFilters);
         }
-        if (is_callable($this->sortFunction)){
-            $data = ($this->sortFunction)($data, $sortBy, $order);
+
+        if (isset($this->filterOperator)){
+            $this->setFilterOperator($this->filterOperator);
         }
+
+        if (method_exists($this, 'listFilter')){
+            $data = $this->listFilter($data, $filter);
+        }
+
+        if (method_exists($this, 'listSort')){
+            $data = $this->listSort($data, $sortBy, $order);
+        }        
         else {
             if ($sortBy != ''){
                 $data = $data->orderBy($sortBy, $order);
@@ -124,4 +140,5 @@ class PaginatedList
             return $query->orWhere($key, $operator, $value);
         }
     }
+    
 }

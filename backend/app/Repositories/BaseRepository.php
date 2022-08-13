@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
 use Illuminate\Http\Request;
@@ -17,7 +17,7 @@ class BaseRepository implements RepositoryInterface
 
     public function getData()
     {
-        return $this->data;
+        return $this->data->query();
     }
 
     public function getById(String $id)

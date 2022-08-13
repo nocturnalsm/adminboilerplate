@@ -3,24 +3,24 @@ import Loadable from 'app/components/Loadable/Loadable';
 
 const NotFound = Loadable(lazy(() => import("./NotFound")));
 const ForgotPassword = Loadable(lazy(() => import("./ForgotPassword")));
-const JwtLogin = Loadable(lazy(() => import("./login/JwtLogin")));
-const JwtRegister = Loadable(lazy(() => import("./register/JwtRegister")));
+const ResetPassword = Loadable(lazy(() => import("./ResetPassword")));
+const Login = Loadable(lazy(() => import("./Login")));
 
 const sessionRoutes = [
     {
-        path: '/session/signup',
-        element: <JwtRegister />,
+        path: '/login',
+        element: <Login />,
     },
     {
-        path: '/session/signin',
-        element: <JwtLogin />,
-    },
-    {
-        path: '/session/forgot-password',
+        path: '/forgot-password',
         element: <ForgotPassword />,
     },
     {
-        path: '/session/404',
+        path: '/reset-password/:token',
+        element: <ResetPassword />,
+    },
+    {
+        path: '/404',
         element: <NotFound />,
     },
 ]

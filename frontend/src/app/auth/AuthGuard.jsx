@@ -1,66 +1,48 @@
 import useAuth from 'app/hooks/useAuth'
 import { flat } from 'app/utils/utils'
-import React, { useState, useEffect, useContext } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import AppContext from '../contexts/AppContext'
+import React from 'react'
+import { matchPath } from 'react-router'
+import { Navigate, useLocation  } from 'react-router-dom'
 import { AllPages } from '../routes/routes'
 
-const getUserRoleAuthStatus = (pathname, user, routes) => {
+const authorize = (pathname, user, routes) => {
     if (!user) {
         return false
-    }
-    const matched = routes.find((r) => r.path === pathname)
-
-    const authenticated =
-        matched && matched.auth && matched.auth.length
-            ? matched.auth.includes(user.role)
+    }    
+    const matched = routes.find((r) => {         
+        return r.path && matchPath(r.path, pathname) !== null
+    })    
+    return matched && matched.auth && matched.auth.length
+            ? (typeof matched.auth === 'function' ? matched.auth(user) : user.permissions.indexOf(matched.auth) >= 0)
             : true
-    console.log(matched, user)
-    return authenticated
 }
 
 const AuthGuard = ({ children }) => {
-    const { isAuthenticated, user } = useAuth()
-
-    // return <>{isAuthenticated ? children : <Navigate to="/session/signin" />}</>
-
-    const [previouseRoute, setPreviousRoute] = useState(null)
+    const { user, isAuthenticated } = useAuth()
     const { pathname } = useLocation()
-    const routes = flat(AllPages())
 
-    console.log(user)
-
-    const isUserRoleAuthenticated = getUserRoleAuthStatus(
+    const routes = flat(AllPages())    
+    const isAuthorized = authorize (
         pathname,
         user,
         routes
     )
-    let authenticated = isAuthenticated && isUserRoleAuthenticated
-
-    // IF YOU NEED ROLE BASED AUTHENTICATION,
-    // UNCOMMENT ABOVE TWO LINES, getUserRoleAuthStatus METHOD AND user VARIABLE
-    // AND COMMENT OUT BELOW LINE
-
-    // let authenticated = isAuthenticated
-
-    useEffect(() => {
-        if (previouseRoute !== null) setPreviousRoute(pathname)
-    }, [pathname, previouseRoute])
-
-    if (authenticated) return <>{children}</>
+    console.log(isAuthenticated, isAuthorized)
+    if (isAuthenticated && isAuthorized) return <>{children}</>
     else {
-        return (
-            <Navigate
-                to="/session/signin"
-                state={{ redirectUrl: previouseRoute }}
-            />
-            // <Redirect
-            //     to={{
-            //         pathname: '/session/signin',
-            //         state: { redirectUrl: previouseRoute },
-            //     }}
-            // />
-        )
+        if (isAuthenticated){
+            return (
+                <Navigate to="/404" />
+            )
+        }
+        else {
+            return (
+                <Navigate
+                    to="/login"
+                    state={{ redirectUrl: pathname }}
+                />
+            )
+        }
     }
 }
 

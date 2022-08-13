@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces\Services;
+namespace App\Interfaces;
 
 use Illuminate\Http\Request;
 
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 interface ServiceInterface
 {
 
-    public function getList(Request $request) : Array;    
+    public function getList(Request $request);    
     public function getById(String $id);
     public function create(Request $request);
     public function update(String $id, Request $request);

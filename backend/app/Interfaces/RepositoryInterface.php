@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces\Repositories;
+namespace App\Interfaces;
 
 use Illuminate\Http\Request;
 
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 interface RepositoryInterface
 {
 
-    public function getData() : Array;
+    public function getData();
     public function getById(String $id);
     public function create(Array $params);
     public function update(String $id, Array $params);
