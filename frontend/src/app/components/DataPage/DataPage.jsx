@@ -3,13 +3,14 @@ import { Grid, Card, CardContent, Stack, Chip, Tooltip, Typography, CircularProg
 import { styled } from '@mui/system'
 import MyToast from 'app/components/MyToast'
 import axiosInstance from 'axios.js'
-import MUIDataTable from "mui-datatables";
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import MUIDataTable from "mui-datatables"
+import DeleteOptionButton from './DeleteOptionButton'
+import EditOptionButton from './EditOptionButton'
 import useAuth from 'app/hooks/useAuth'
 import _ from 'lodash'
 import AddIcon from "@mui/icons-material/Add";
 import { ConfirmationDialog } from 'app/components'
+import DataPageToolbar from 'app/components/DataPage/DataPageToolbar'
 
 const ContentBox = styled('div')(({ theme }) => ({
     margin: '30px',
@@ -18,44 +19,25 @@ const ContentBox = styled('div')(({ theme }) => ({
     },
 }))
 
-const defaultOptionColumn = [
-  {
-    name: 'id',
-    title: 'Options',
-    buttons: [
-      {
-        handle: handleEdit,
-        icon: <EditIcon />,
-        title: "Edit Data",
-        arialabel: "Edit,"
-      },
-      {
-        handle: handleDelete,
-        icon: <DeleteIcon />,
-        title: "Delete Data",
-        arialabel: "Delete,"
-      }
-    ]
-  }
-]
-
 const DataPage = ({
       columns,
       customToolbar,
       dataMapping,
+      dataPermissions,
       dataUrl,
-      deleteUrl,
       deleteSuccessMessage,
       editModal,       
       onLoadData,
       onAdd,
       onEdit,
-      onDelete,
+      onCustomToolbarClick,
+      onDelete,      
       optionColumn,
       pageTitle,
       rowsPerPageOptions,
       saveSuccessMessage,      
       showOptions,
+      toolbarButtons,
       ...props
     }) => {
 
@@ -76,6 +58,13 @@ const DataPage = ({
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState(initialState)
     const [deleteId, setDeleteId] = useState(false)
+    const [confirm, setConfirm] = useState({
+        opened: false,
+        title: '',
+        onClose: () => {},
+        onConfirm: () => {},
+        onOpen: () => {}
+    })
     const { user } = useAuth()
 
     const loadData = async (params) => {
@@ -95,12 +84,18 @@ const DataPage = ({
         const response = await axiosInstance.get(dataUrl, {params: newParams})
         
         if (response.data){
-            setData(dataMapping ? dataMapping() : response.data.data)
+            setData(dataMapping ? response.data.data.map(dataMapping) : response.data.data)
             setCount(response.data.total)
             setFetchParams(newParams)
             setLoading(false)
         }
     }
+
+    const EditModal = ({children}) => (
+        <>
+          {children}
+        </>
+    )
 
     useEffect(() =>  {
       loadData({
@@ -121,7 +116,7 @@ const DataPage = ({
     }, 500), []);    
 
 
-    const handleNew = (ev) => {
+    const handleNew = () => {
         setFormOpen(true)
         setFormData(initialState)
     }
@@ -146,14 +141,43 @@ const DataPage = ({
         setFormOpen(true)
     }    
     
-    const EditModal = props => {      
-        return editModal({...props, 
-          data: formData,
-          open: formOpen,
-          onSuccess: handleFormSuccess,
-          onError: handleFormError,
-          onClose: () => setFormOpen(false)          
-        })
+    let defaultToolbar = []
+    
+    if (user.permissions.includes(dataPermissions.add)){
+      defaultToolbar.push({
+          name: 'add',
+          icon: <AddIcon />,
+          hoverText: 'Add'
+      })    
+    } 
+
+    let defaultOptionButtons = []
+    if (user.permissions.includes(dataPermissions.edit)){
+      defaultOptionButtons = [...defaultOptionButtons, 
+        <EditOptionButton 
+            onClick={(event, id) => handleEdit(event, id)}
+        />
+      ]
+    }
+    if (user.permissions.includes(dataPermissions.delete)){
+      defaultOptionButtons = [...defaultOptionButtons,
+        <DeleteOptionButton onClick={handleDelete} />
+      ]
+    }
+
+    const printOption = (option, value) => {
+        let
+    }
+    let defaultOptionColumn = {
+        name: 'id',
+        title: 'Options',
+        buttons: defaultOptionButtons
+    }
+
+    const handleToolbar = (event, button) => {
+        if (button.name === 'add'){
+            handleNew()
+        }
     }
 
     const options = {
@@ -164,7 +188,6 @@ const DataPage = ({
       serverSide: true,
       count: count,
       page: page,
-      customToolbar: customToolbar ?? null,
       onTableChange: (action, tableState) => {        
         if (action === "changePage") {
             setPage(tableState.page)
@@ -194,38 +217,28 @@ const DataPage = ({
       }
     }
 
-    useEffect(() => {
-        if (showOptions ?? true){
-          optionColumn = optionColumn ?? defaultOptionColumn
-          columns.push({
-            name: optionColumn.name ?? "id",
-            label: optionColumn.title ?? "Options",
-            options: {
-              filter: false,
-              sort: false,
-              customBodyRender: (value) => (
-                <Stack direction="row" spacing={1}>
-                  {optionColumn.buttons.map((item, key) => {
-                    return user.permissions.includes(item.permission) ? (
-                        <IconButton 
-                            key={`option_${optionColumn.name ?? 'id'}_${key}`}
-                            onClick={event => item.handle(event, value)} 
-                            title={item.title ?? ''} 
-                            aria-label={item.arialabel ?? ''}>
-                          {item.icon}
-                        </IconButton>
-                      ) : ''
-                  })}
-                </Stack>
-              )
-            }
-          })
-        }
-    }, [])
+    if (showOptions ?? true){
+        optionColumn = optionColumn ?? defaultOptionColumn
+        columns = [...columns, {
+          name: optionColumn.name ?? "id",
+          label: optionColumn.title ?? "Options",
+          options: {
+            filter: false,
+            sort: false,
+            customBodyRender: (value) => (
+              <Stack direction="row" spacing={1}>
+                {optionColumn.buttons.map((item, key) => (
+                  <Fragment key={`row_${value}_${key}`}>{printOption(item, value)}</Fragment>
+                ))}
+              </Stack>
+            )
+          }
+        }]
+    }
 
     const handleDelete = () => {
         (async () => {           
-            axiosInstance.delete(`${deleteUrl}/${deleteId}`)
+            axiosInstance.delete(`${dataUrl}/${deleteId}`)
                          .then(response => {
                             if (response.data.error){
                                 setAlert({message: response.data.error, severity: "error", open: true})
@@ -248,9 +261,15 @@ const DataPage = ({
         <Fragment>
             <MyToast message={alert.message} severity={alert.severity} alert={alert.open} onClose={handleAlertClose} />
             {editModal ?
-            <EditModal />
+            <EditModal 
+              data={formData} 
+              open={formOpen} 
+              onSuccess={handleFormSuccess} 
+              onError={handleFormError}
+              onClose={() => setFormOpen(false)}
+            />
             : ''}
-            <ConfirmationDialog title={"Delete this permission ?"} onConfirmDialogClose={() => setDeleteId(false)} open={deleteId !== false} onYesClick={handleDelete} />
+            <ConfirmationDialog title={confirm.title} onConfirmDialogClose={confirm.onCLose} open={confirm.opened} onYesClick={confirm.onConfirm} />
             <ContentBox>
                 <Grid container spacing={3}>
                     <Grid item xs={12}>

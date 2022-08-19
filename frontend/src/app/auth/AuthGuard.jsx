@@ -27,7 +27,7 @@ const AuthGuard = ({ children }) => {
         user,
         routes
     )
-    console.log(isAuthenticated, isAuthorized)
+
     if (isAuthenticated && isAuthorized) return <>{children}</>
     else {
         if (isAuthenticated){

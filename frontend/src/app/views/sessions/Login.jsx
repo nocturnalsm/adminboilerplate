@@ -105,6 +105,7 @@ const Login = () => {
                                     size="small"
                                     label="Email"
                                     onChange={handleChange}
+                                    disabled={loading}
                                     type="email"
                                     name="email"
                                     autoFocus={true}
@@ -123,6 +124,7 @@ const Login = () => {
                                     onChange={handleChange}
                                     name="password"
                                     type="password"
+                                    disabled={loading}
                                     value={userInfo.password}
                                     validators={['required']}
                                     errorMessages={['this field is required']}
