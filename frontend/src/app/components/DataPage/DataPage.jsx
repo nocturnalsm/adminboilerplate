@@ -40,11 +40,6 @@ const DataPage = ({
       toolbarButtons,
       ...props
     }) => {
-
-    let initialState = {
-        name: '',
-        id: ''
-    }
         
     const [formOpen, setFormOpen] = useState(false)
     const [alert, setAlert] = useState({open: false, severity: 'success', message: ''})
@@ -56,7 +51,7 @@ const DataPage = ({
     const [filters, setFilters] = useState({})
     const [rowPerPage, setRowPerPage] = useState(10)
     const [loading, setLoading] = useState(false)
-    const [formData, setFormData] = useState(initialState)
+    
     const [deleteId, setDeleteId] = useState(false)
     const [confirm, setConfirm] = useState({
         opened: false,
@@ -117,8 +112,7 @@ const DataPage = ({
 
 
     const handleNew = () => {
-        setFormOpen(true)
-        setFormData(initialState)
+        setFormOpen(true)        
     }
 
     const handleFormSuccess = (newData) => {
@@ -135,9 +129,7 @@ const DataPage = ({
         setAlert({open: false});
     }
 
-    const handleEdit = (event, id) => {
-        const edited = data.find(f => f.id == id)    
-        setFormData({...formData, ...edited})
+    const handleEdit = (event, id) => {        
         setFormOpen(true)
     }    
     
@@ -165,7 +157,7 @@ const DataPage = ({
       ]
     }
 
-    const printOption = (option, value) => {
+    const Option = ({item, value}) => {
         let
     }
     let defaultOptionColumn = {
@@ -228,7 +220,7 @@ const DataPage = ({
             customBodyRender: (value) => (
               <Stack direction="row" spacing={1}>
                 {optionColumn.buttons.map((item, key) => (
-                  <Fragment key={`row_${value}_${key}`}>{printOption(item, value)}</Fragment>
+                  <Option key={`row_${value}_${key}`} item={item} value={value} />
                 ))}
               </Stack>
             )
@@ -262,7 +254,6 @@ const DataPage = ({
             <MyToast message={alert.message} severity={alert.severity} alert={alert.open} onClose={handleAlertClose} />
             {editModal ?
             <EditModal 
-              data={formData} 
               open={formOpen} 
               onSuccess={handleFormSuccess} 
               onError={handleFormError}
