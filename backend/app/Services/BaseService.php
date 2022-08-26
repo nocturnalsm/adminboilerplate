@@ -34,7 +34,6 @@ class BaseService implements ServiceInterface
         
         $list = new $this->list;
         $list->setData($data);
-        
         $result = $list->make($sortBy, $order, $filter);
                 
         if (trim($limit) != ''){

@@ -13,7 +13,7 @@ class PaginatedList
 
     public function __construct()
     {        
-        $this->filterFunction = $this->defaultFilter();
+        $this->filterFunction = $this->defaultFilter;
     }
 
     public function setData($data)
@@ -40,6 +40,10 @@ class PaginatedList
         if (method_exists($this, 'listFilter')){
             $data = $this->listFilter($data, $filter);
         }
+        
+        if (is_array($filter)){
+            $data = ($this->filterFunction)($data, $filter);
+        }
 
         if (method_exists($this, 'listSort')){
             $data = $this->listSort($data, $sortBy, $order);
@@ -49,6 +53,7 @@ class PaginatedList
                 $data = $data->orderBy($sortBy, $order);
             }
         }
+
         return $data;
     }
     public function useQuery($function)

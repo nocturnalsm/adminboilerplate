@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import useAuth from 'app/hooks/useAuth'
 import _ from 'lodash'
-import AddIcon from "@mui/icons-material/Add";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import UserForm from './UserForm'
 import { ConfirmationDialog } from 'app/components'
 
@@ -43,6 +43,7 @@ const Users = () => {
     const [roles, setRoles] = useState([])
     const [deleteId, setDeleteId] = useState(false)
     const { user } = useAuth()
+
     const loadData = async (params) => {
 
         setLoading(true)
@@ -78,6 +79,7 @@ const Users = () => {
     }
 
     useEffect(() =>  {
+      console.log(filters)
       loadData({
           page: page,
           sort: sort.name ?? null, order: sort.direction,
@@ -106,14 +108,8 @@ const Users = () => {
       getRoles()      
     }, [])
     
-    const debounceSearch = useCallback(_.debounce(value => {      
-      let search = value ? value.trim() : ''
-      let filter = search === "" ? {} : {
-          name: value.trim(),
-          email: value.trim(),
-      }
-      loadData({filter: filter})
-
+    const debounceSearch = useCallback(_.debounce(filter => {      
+        loadData({filter: filter})
     }, 500), []);    
 
     const handleNew = (ev) => {
@@ -201,19 +197,19 @@ const Users = () => {
     const CustomToolbar = () => (
         <Tooltip title={"Add User"}>
           <IconButton onClick={handleNew}>
-            <AddIcon />
+            <AddCircleIcon />
           </IconButton>
         </Tooltip>
     )
 
     const options = {
       responsive: "standard",
-      filters: false,
       rowsPerPage: rowPerPage,
       rowsPerPageOptions: [2, 5, 10],
       serverSide: true,
       count: count,
       page: page,
+      filterType: 'textField',
       customToolbar: () => {
         return user.permissions.includes('users.add') ? <CustomToolbar /> : null
       },
@@ -227,21 +223,14 @@ const Users = () => {
         else if (action === "changeRowsPerPage"){
             setRowPerPage(tableState.rowsPerPage)
         }
-        else if (action === "search"){            
-            debounceSearch(tableState.searchText)
-        }
-        else if (action === 'onFilterDialogOpen'){
-
-        }
         else if (action === "filterChange"){
-            let filterValues = {}
-            tableState.filterList.forEach((item, key) => {
-                if (columns[key].filter !== false){
-                    let index = columns[key].name
-                    filterValues[index] = item[0]
+            let filterValues = tableState.filterList.reduce((items, item, key) => {
+                if (tableState.columns[key].filter == true && item[0]){
+                    items = {...items, [tableState.columns[key].name]: item[0]}
                 }
-            })
-            setFilters(filterValues)
+                return items
+            }, {})
+            debounceSearch(filterValues)
         }
       }
     }

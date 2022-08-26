@@ -13,16 +13,7 @@ class UsersList extends PaginatedList
     {        
         $this->listFilters = [
             "name" => ["operator" => "like"],
-            "email" => ["operator" => "like"],
-            "department" => function($query, $key, $value){
-                $dept_id = DB::table("departments")->where("name", "LIKE", $value)->value("id");
-                if ($dept_id){
-                    return $query->whereDepartmentId($dept_id);
-                }
-                else {
-                    return $query;
-                }
-            }
+            "email" => ["operator" => "like"]
         ];
         $this->filterOperator = "OR";
     }

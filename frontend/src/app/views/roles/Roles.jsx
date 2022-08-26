@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import useAuth from 'app/hooks/useAuth'
 import _ from 'lodash'
-import AddIcon from "@mui/icons-material/Add";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RoleForm from './RoleForm'
 import { ConfirmationDialog } from 'app/components'
 
@@ -167,14 +167,14 @@ const Roles = () => {
     const CustomToolbar = () => (
         <Tooltip title={"Add Role"}>
           <IconButton onClick={handleNew}>
-            <AddIcon />
+            <AddCircleIcon />
           </IconButton>
         </Tooltip>
     )
 
     const options = {
       responsive: "standard",
-      filters: false,
+      filterType: 'textField',      
       rowsPerPage: rowPerPage,
       rowsPerPageOptions: [2, 5, 10],
       serverSide: true,
