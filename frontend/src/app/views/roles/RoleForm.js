@@ -37,10 +37,30 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
     const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState(null)
+    const [permissions, setPermissions] = useState([])
 
     const handleClose = () => {
       onClose()
     }
+
+    const getPermissions = async () => {
+      const response = await axiosInstance.get('/permissions', {
+        params: {
+          limit: 100000000
+        }
+      })
+      const permissionData = response.data.data.map(item => {
+        return {
+            id: item.id,
+            name: item.name
+        }
+      })
+      setPermissions([{id: '', name: ''}, ...permissionData])
+    }
+
+    useEffect(() => {
+      getPermissions()      
+    }, [])
 
     useEffect(() => {
         setFormData(f => {
@@ -68,7 +88,8 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
                 method: formData.id !== "" ? 'put' : 'post',
                 url: `/roles${formData.id !== '' ? '/' + formData.id : ''}`,
                 data: {
-                    name: formData.name
+                    name: formData.name,
+                    permissions: formData.roles.map(i => i.id)
                 }
             });
             return response
@@ -119,6 +140,34 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
                 value={formData.name}
                 onChange={ev => handleChange({name: ev.target.value})}
               />
+              <Autocomplete
+                  multiple                      
+                  disabled={loading}
+                  getOptionLabel={option => option.name ?? ''}
+                  value={formData.permissions}                      
+                  onChange={(event, selected) => {
+                    handleChange({permissions: selected})
+                  }}
+                  options={permissions}
+                  renderOption={(props, option) => (
+                    <li {...props} key={`options_permission_${option.id}`}>
+                        {option.name}
+                    </li>
+                    )
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      fullWidth
+                      margin="dense"                          
+                      InputProps={{
+                        ...params.InputProps
+                      }}
+                      placeholder="Select Permissions"                      
+                    />
+                  )}
+                />
             </DialogContent>
           ) : ''}
           <DialogActions>

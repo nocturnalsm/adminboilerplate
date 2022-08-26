@@ -3,18 +3,10 @@
 namespace App;
 
 class PaginatedList
-{
-    protected $filterFunction;
-    protected $queryFunction;
-    protected $sortFunction;
+{    
     protected $filterOperator = "AND";
     protected $filterRules = [];
     protected $data;
-
-    public function __construct()
-    {        
-        $this->filterFunction = $this->defaultFilter;
-    }
 
     public function setData($data)
     {
@@ -25,8 +17,8 @@ class PaginatedList
     {
         $data = $this->data;
 
-        if (method_exists($this, 'listQuery')){
-            $data = $this->listQuery($data);
+        if (method_exists($this, 'useQuery')){
+            $data = $this->useQuery($data);
         }
 
         if (isset($this->listFilters) && count($this->listFilters) > 0){
@@ -36,17 +28,18 @@ class PaginatedList
         if (isset($this->filterOperator)){
             $this->setFilterOperator($this->filterOperator);
         }
-
-        if (method_exists($this, 'listFilter')){
-            $data = $this->listFilter($data, $filter);
-        }
-        
+                
         if (is_array($filter)){
-            $data = ($this->filterFunction)($data, $filter);
+            if (method_exists($this, 'useFilter')){
+                $data = $this->useFilter($data, $filter);
+            }
+            else {
+                $data = $this->defaultFilter($data, $filter);
+            }
         }
 
-        if (method_exists($this, 'listSort')){
-            $data = $this->listSort($data, $sortBy, $order);
+        if (method_exists($this, 'useSort')){
+            $data = $this->useSort($data, $sortBy, $order);
         }        
         else {
             if ($sortBy != ''){
@@ -55,68 +48,48 @@ class PaginatedList
         }
 
         return $data;
-    }
-    public function useQuery($function)
-    {
-        if (is_callable($function)){
-            $this->queryFunction = $function;
-        }
-    }
-    public function useFilter($function)
-    {
-        if (is_callable($function)){
-            $this->filterFunction = $function;
-        }
-    }
-    public function useSort($function)
-    {
-        if (is_callable($function)){
-            $this->sortFunction = $function;
-        }
-    }
-    protected function defaultFilter()
-    {
-        return function($data, $filter){
+    }    
+    protected function defaultFilter($data, $filter){
 
-            $data = $data->where(function($query) use ($filter){
-                foreach ($filter as $key=>$value){
+        $data = $data->where(function($query) use ($filter){
+            foreach ($filter as $key=>$value){
 
-                    if (is_bool($value)){
-                        $checkNotEmpty = is_bool($value);
-                    }
-                    else {
-                        $checkNotEmpty = !empty($value);
-                    }
-                    if ($checkNotEmpty){
-                        if (isset($this->filterRules[$key])){
-                            $itemFilter = $this->filterRules[$key];
-                            if ($itemFilter !== false){
-                                if (is_callable($itemFilter)){
-                                    $query = $itemFilter($query, $key, $value);
+                if (is_bool($value)){
+                    $checkNotEmpty = is_bool($value);
+                }
+                else {
+                    $checkNotEmpty = !empty($value);
+                }
+                if ($checkNotEmpty){
+                    if (isset($this->filterRules[$key])){
+                        $itemFilter = $this->filterRules[$key];
+                        if ($itemFilter !== false){
+                            if (is_callable($itemFilter)){
+                                $query = $itemFilter($query, $key, $value);
+                            }
+                            else if (is_array($itemFilter)){
+                                $key = isset($itemFilter["key"]) ? $itemFilter["key"] : $key;
+
+                                if (isset($itemFilter["operator"])){
+                                    $value = strtolower(trim($itemFilter["operator"])) == "like" ? "%{$value}%" : $value;
+                                    $query = $this->setWhere($query, $key, $itemFilter["operator"], $value);
                                 }
-                                else if (is_array($itemFilter)){
-                                    $key = isset($itemFilter["key"]) ? $itemFilter["key"] : $key;
+                                else {
 
-                                    if (isset($itemFilter["operator"])){
-                                        $value = strtolower(trim($itemFilter["operator"])) == "like" ? "%{$value}%" : $value;
-                                        $query = $this->setWhere($query, $key, $itemFilter["operator"], $value);
-                                    }
-                                    else {
-
-                                        $query = $this->setWhereEqual($query, $key, $value);
-                                    }
+                                    $query = $this->setWhereEqual($query, $key, $value);
                                 }
                             }
                         }
-                        else {
-                            $query = $this->setWhereLike($query, $key, $value);
-                        }
+                    }
+                    else {
+                        $query = $this->setWhereLike($query, $key, $value);
                     }
                 }
-          });
+            }
+        });
 
-          return $data;
-        };
+        return $data;
+        
     }
     public function setFilterRules($rules)
     {

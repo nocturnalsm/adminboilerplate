@@ -21,9 +21,10 @@ const ContentBox = styled('div')(({ theme }) => ({
 
 const Roles = () => {
 
-    let initialState = {
+    let initialState = {        
+        id: '',
         name: '',
-        id: ''
+        permissions: []
     }
 
     const [formOpen, setFormOpen] = useState(false)

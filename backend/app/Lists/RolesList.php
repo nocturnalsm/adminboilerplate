@@ -8,9 +8,9 @@ use DB;
 
 class RolesList extends PaginatedList
 {
-    public function listQuery($data)
+    public function useQuery($query)
     {         
-        return $data->with(["permissions"]);
+        return $query->with(["permissions"]);
     }
 
 }

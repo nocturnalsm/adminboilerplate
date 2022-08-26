@@ -91,7 +91,6 @@ const Users = () => {
     const getRoles = async () => {
         const response = await axiosInstance.get("/roles", {
           params: {
-            filter: {hide: true},
             limit: 100000000
           }
         })
@@ -209,6 +208,8 @@ const Users = () => {
       serverSide: true,
       count: count,
       page: page,
+      search: false,
+      jumpToPage: true,
       filterType: 'textField',
       customToolbar: () => {
         return user.permissions.includes('users.add') ? <CustomToolbar /> : null

@@ -18,9 +18,9 @@ class UsersList extends PaginatedList
         $this->filterOperator = "OR";
     }
 
-    public function listQuery($data)
+    public function useQuery($query)
     {         
-        return $data->with(["roles"]);
+        return $query->with(["roles"]);
     }
 
 }

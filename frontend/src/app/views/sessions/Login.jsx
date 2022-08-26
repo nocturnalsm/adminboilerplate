@@ -2,14 +2,17 @@ import {
     Card,
     Grid,
     Button,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    Stack
 } from '@mui/material'
 import React, { useState } from 'react'
 import useAuth from 'app/hooks/useAuth'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Box, styled, useTheme } from '@mui/system'
 import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator'
-import { Paragraph } from 'app/components/Typography'
+import { Paragraph, H6 } from 'app/components/Typography'
+import SocialLogin from 'app/components/SocialLogin'
 
 const FlexBox = styled(Box)(() => ({
     display: 'flex',
@@ -48,6 +51,21 @@ const StyledProgress = styled(CircularProgress)(() => ({
     position: 'absolute',
     top: '6px',
     left: '25px',
+}))
+
+const LoginWith = styled(H6)(() => ({
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    display: 'grid',
+    gridTemplateColumns: '1fr auto 1fr',
+    gridTemplateRows: '20px 0',
+    gridGap: '20px',
+    lineHeight: 3,
+    '&:after,:before': {
+        content: '" "',
+        display: 'block',
+        borderBottom: '1px solid #dddddd'
+    }
 }))
 
 const Login = () => {
@@ -161,7 +179,9 @@ const Login = () => {
                                         Forgot password?
                                     </Button>
                                 </FlexBox>
-                            </ValidatorForm>
+                            </ValidatorForm>                            
+                            <LoginWith>Or Log In with</LoginWith>
+                            <SocialLogin />
                         </ContentBox>
                     </Grid>
                 </Grid>
