@@ -7,9 +7,9 @@ import MUIDataTable from "mui-datatables";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import useAuth from 'app/hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import RoleForm from './RoleForm'
 import { ConfirmationDialog } from 'app/components'
 
 const ContentBox = styled('div')(({ theme }) => ({
@@ -40,6 +40,8 @@ const Roles = () => {
     const [formData, setFormData] = useState(initialState)
     const [deleteId, setDeleteId] = useState(false)
     const { user } = useAuth()
+    const navigate = useNavigate()
+
     const loadData = async (params) => {
 
         setLoading(true)
@@ -92,28 +94,15 @@ const Roles = () => {
     }, 500), []);    
 
     const handleNew = (ev) => {
-        setFormOpen(true)
-        setFormData(initialState)
+        navigate("/roles/create")
     }
-
-    const handleFormSuccess = (newData) => {
-        setAlert({open: true, severity: 'success', message: 'Data has been saved!'})
-        loadData(fetchParams)
-        setFormOpen(false)
-    }
-
-    const handleFormError = message => {
-        setAlert({open: true, severity: 'error', message: message})
-    }
-
+    
     const handleAlertClose = () => {
         setAlert({open: false});
     }
 
     const handleEdit = (id) => {
-        const role = data.find(f => f.id == id)    
-        setFormData({...formData, ...role})
-        setFormOpen(true)
+        navigate(`/roles/${id}`)
     }
 
 
@@ -134,9 +123,16 @@ const Roles = () => {
          sort: false,
          customBodyRender: (value) => (
           <Stack direction="row" spacing={1}>
-            {value ? value.map((item, key) => (
-                <Chip key={`permission_${item.id}_${key}`} size="small" label={item.name} color="success" />
-            )) : ''}
+            {value ? value.filter((item, key) => key <= 2)
+                          .map((item, key) => {
+                              if (key < 2){
+                                return <Chip key={`permission_${item.id}_${key}`} size="small" label={item.name} color="success" />
+                              }
+                              else {
+                                return <Chip key={`permission_${item.id}_${key}_more`} size="small" label={`+${value.length - 2} more`} color="warning" />
+                              }                        
+                          }) : ''
+            }
           </Stack>
          )
         }
@@ -233,8 +229,7 @@ const Roles = () => {
 
     return (
         <Fragment>
-            <MyToast message={alert.message} severity={alert.severity} alert={alert.open} onClose={handleAlertClose} />
-            <RoleForm data={formData} open={formOpen} onSuccess={handleFormSuccess} onError={handleFormError} onClose={() => setFormOpen(false)} />
+            <MyToast message={alert.message} severity={alert.severity} alert={alert.open} onClose={handleAlertClose} />            
             <ConfirmationDialog title={"Delete this role ?"} onConfirmDialogClose={() => setDeleteId(false)} open={deleteId !== false} onYesClick={handleDelete} />
             <ContentBox>
                 <Grid container spacing={3}>

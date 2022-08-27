@@ -1,52 +1,42 @@
 import { useState, useEffect } from 'react'
-import { Button, IconButton, Autocomplete } from '@mui/material';
+import { Button, Grid, Box, Card, CardContent, CardHeader, Checkbox, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { styled } from '@mui/system'
 import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from 'axios.js'
+import { useParams } from 'react-router-dom'
+import { H3, H4 } from 'app/components/Typography'
+import MyToast from 'app/components/MyToast'
+import Breadcrumb from 'app/components/Breadcrumb/Breadcrumb'
 
+const ContentBox = styled('div')(({ theme }) => ({
+  margin: '30px',
+  [theme.breakpoints.down('sm')]: {
+      margin: '16px',
+  },
+}))
 
-const FormDialogTitle = ({ children, onClose, ...other }) => {
+const PermissionList = styled(List)(() => ({
+    display: 'grid',
+    gridTemplateColumns: 'auto auto auto'
+}))
 
-    return (
-      <DialogTitle sx={{ m: 0, p: 2 }} {...other}>
-        {children}
-        {onClose ? (
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        ) : null}
-      </DialogTitle>
-    );
-}
-
-export default function RoleForm({data, open, onClose, onError, onSuccess}) {
-
+const RoleForm = () => {
+    let initialData = {
+        name: '',
+        permissions: []
+    }
     const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState(null)
     const [permissions, setPermissions] = useState([])
-
-    const handleClose = () => {
-      onClose()
-    }
+    const [alert, setAlert] = useState({open: false, severity: 'success', message: ''})
+    const { role } = useParams()
 
     const getPermissions = async () => {
       const response = await axiosInstance.get('/permissions', {
         params: {
-          limit: 100000000
+          limit: 100000000,
+          sort: 'name'
         }
       })
       const permissionData = response.data.data.map(item => {
@@ -55,29 +45,42 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
             name: item.name
         }
       })
-      setPermissions([{id: '', name: ''}, ...permissionData])
+      setPermissions(permissionData)
+    }
+
+    const loadData = async () => {        
+        if (role){
+          const response = await axiosInstance.get(`/roles/${role}`)
+          if (response.data){
+              setFormData({...response.data, permissions: response.data.permissions.map(i => i.name)})
+          }
+        }
+        else {
+          setFormData(initialData)
+        }
     }
 
     useEffect(() => {
       getPermissions()      
+      loadData()
     }, [])
-
-    useEffect(() => {
-        setFormData(f => {
-          return {...f, ...data}
-        })
-    }, [data])
-
-    useEffect(() => {
-        if (open){
-          setErrors({})
-        }
-    }, [open])
 
     const handleChange = field => {
        
         let newData = {...formData, ...field}
         setFormData(newData)
+    }
+
+    const handleToggle = (event, name) => {
+        let { permissions } = formData
+        let index = permissions.indexOf(name)
+        if (index > -1){
+            permissions.splice(index, 1)
+        }
+        else {
+            permissions.push(name)
+        }
+        setFormData(f => { return {...f, permissions: permissions}})
     }
 
     const handleSave = () => {
@@ -89,7 +92,7 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
                 url: `/roles${formData.id !== '' ? '/' + formData.id : ''}`,
                 data: {
                     name: formData.name,
-                    permissions: formData.roles.map(i => i.id)
+                    permissions: formData.permissions
                 }
             });
             return response
@@ -107,11 +110,10 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
             if(response.message){
                 if (response.errors){
                   setErrors(response.errors)
-                }
-                onError(response.message)
+                }                
             }
-            else {
-                onSuccess(response.data)
+            else {                
+                setAlert({open: true, severity: 'success', message: 'Data has been saved!'})
             }
         })
         .finally(() => {
@@ -120,59 +122,71 @@ export default function RoleForm({data, open, onClose, onError, onSuccess}) {
     }
 
     return (
-        <Dialog open={open} onClose={handleClose}>
-          <FormDialogTitle onClose={handleClose}>Roles</FormDialogTitle>
-          {formData ? (
-            <DialogContent>
-              <TextField
-                autoFocus
-                error={errors.hasOwnProperty('name')}
-                helperText={errors.hasOwnProperty('name') ? errors.name : ''}
-                margin="dense"
-                id="name"
-                label="Name"
-                size="small"
-                name="name"
-                disabled={loading}
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={formData.name}
-                onChange={ev => handleChange({name: ev.target.value})}
-              />
-              <Autocomplete
-                  multiple                      
-                  disabled={loading}
-                  getOptionLabel={option => option.name ?? ''}
-                  value={formData.permissions}                      
-                  onChange={(event, selected) => {
-                    handleChange({permissions: selected})
-                  }}
-                  options={permissions}
-                  renderOption={(props, option) => (
-                    <li {...props} key={`options_permission_${option.id}`}>
-                        {option.name}
-                    </li>
-                    )
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size="small"
-                      fullWidth
-                      margin="dense"                          
-                      InputProps={{
-                        ...params.InputProps
-                      }}
-                      placeholder="Select Permissions"                      
-                    />
-                  )}
-                />
-            </DialogContent>
-          ) : ''}
-          <DialogActions>
-            <Button disabled={loading} variant="contained" color="primary" onClick={handleSave}>Erstellen</Button>
-          </DialogActions>
-        </Dialog>
-    )
+      <>
+        <MyToast message={alert.message} severity={alert.severity} alert={alert.open} onClose={() => setAlert({open: false})} />
+        <ContentBox>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+                <Card sx={{minHeight: 'calc(100% - 1rem)'}}>
+                  <CardHeader title={(
+                  <Breadcrumb routeSegments={[
+                          {
+                              name: 'Roles',
+                              path: '/roles'
+                          },
+                          {
+                              name: role ? 'Edit Role' : 'New Role'                          
+                          }
+                        ]}
+                  />)}
+                  />
+                  <CardContent sx={{minHeight: 'calc(100vh - 200px)'}}>
+                    {formData ? (
+                        <>
+                          <TextField
+                            autoFocus
+                            error={errors.hasOwnProperty('name')}
+                            helperText={errors.hasOwnProperty('name') ? errors.name : ''}                          
+                            id="name"
+                            label="Name"
+                            size="small"
+                            name="name"
+                            disabled={loading}
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={formData.name}
+                            onChange={ev => handleChange({name: ev.target.value})}
+                          />
+                          <H4 sx={{marginTop: 4}}>Permissions</H4>
+                          <Box>
+                            <PermissionList>
+                                {permissions.map((item, key) => (
+                                  <ListItem key={item.name}>                                  
+                                      <ListItemIcon>
+                                        <Checkbox
+                                          onChange={ev => handleToggle(ev, item.name)}                                        
+                                          checked={formData.permissions.indexOf(item.name) !== -1}
+                                          edge="start"                                     
+                                          tabIndex={-1}
+                                          disableRipple                                     
+                                        />
+                                      </ListItemIcon>
+                                      <ListItemText primary={item.name} />                                  
+                                  </ListItem>
+                                ))}
+                            </PermissionList>
+                          </Box>
+                          <Button disabled={loading} variant="contained" color="primary" onClick={handleSave}>Save</Button>
+                        </>
+                      ) : ''}          
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>                
+        </ContentBox>
+      </>
+    )    
   }
+
+  export default RoleForm

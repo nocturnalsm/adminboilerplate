@@ -78,8 +78,7 @@ const Users = () => {
         })
     }
 
-    useEffect(() =>  {
-      console.log(filters)
+    useEffect(() =>  {      
       loadData({
           page: page,
           sort: sort.name ?? null, order: sort.direction,

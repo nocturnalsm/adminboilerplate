@@ -24,7 +24,7 @@ class RoleService extends BaseService
     public function validateUsing($params, $id)
     {
         return [
-            "name" => 'required', 'unique:roles,name' .(!empty($id) ? ",{$id}" : "")
+            "name" => 'required', 'unique:roles,name' .(!empty($id) ? ",{$id}" : ""),            
         ];
     }
     

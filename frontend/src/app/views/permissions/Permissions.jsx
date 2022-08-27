@@ -78,11 +78,11 @@ const Permissions = () => {
     const debounceSearch = useCallback(_.debounce(value => {      
       let search = value ? value.trim() : ''
       let filter = search === "" ? {} : {
-          name: value.trim()          
+          name: value.trim()
       }
       loadData({filter: filter})
 
-    }, 500), []);    
+    }, 500), []);
 
     const handleNew = (ev) => {
         setFormOpen(true)

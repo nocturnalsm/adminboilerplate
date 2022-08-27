@@ -28,7 +28,7 @@ class BaseService implements ServiceInterface
  
         $limit = isset($params['limit']) ? intval($params['limit']) : 10;
         $sortBy = isset($params['sort']) ? $params['sort'] : (!empty($this->defaultSort) ? $this->defaultSort : null);
-        $order = isset($params['order']) ? $params['order'] : (!empty($this->defaultOrder) ? $this->defaultOrder : '');
+        $order = isset($params['order']) ? $params['order'] : (!empty($this->defaultOrder) ? $this->defaultOrder : 'asc');
         $filter = isset($params['filter']) ? json_decode($params['filter'], true) : '';
         
         
